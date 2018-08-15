@@ -1,0 +1,1050 @@
+Fitting a 3D Morphable Model to Edges: A Comparison Between Hard and Soft Correspondences 
+
+拟合三维形变模型到边缘：硬和软对应的比较
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+To cite this version: 
+
+引用这个版本：
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer. Fitting a 3D Morphable Model to Edges: A Comparison Between Hard and Soft Correspondences. ACCV Workshop on Facial Informatics, Nov 2016, Taipei, Taiwan. <hal-01271343v2> 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer。拟合三维形变模型到边缘：硬和软对应的比较。 ACCV面部信息研讨会，2016年11月，台湾台北。 \x26lt
+
+
+
+HAL Id: hal-01271343 
+
+HAL Id：hal-01271343
+
+
+
+https://hal.inria.fr/hal-01271343v2 
+
+
+
+
+
+Submitted on 7 Oct 2016 
+
+2016年10月7日提交
+
+
+
+HAL is a multi-disciplinary open access archive for the deposit and dissemination of scientiﬁc research documents, whether they are published or not. The documents may come from teaching and research institutions in France or abroad, or from public or private research centers. 
+
+HAL是一个多学科的开放获取档案，用于存放和传播科学研究文献，无论其是否发表。这些文件可能来自法国或国外的教学和研究机构，或来自公立或私立研究中心。
+
+
+
+L’archive ouverte pluridisciplinaire HAL, est destin´ee au d´epˆot et `a la diﬀusion de documents scientiﬁques de niveau recherche, publi´es ou non, ´emanant des ´etablissements d’enseignement et de recherche fran¸cais ou ´etrangers, des laboratoires publics ou priv´es. 
+
+L\x26#39
+
+
+
+Fitting a 3D Morphable Model to Edges: A Comparison Between Hard and Soft Correspondences 
+
+拟合三维形变模型到边缘：硬和软对应的比较
+
+
+
+Anil Bas(cid:63) 
+
+Anil Bas（cid：63）
+
+
+
+William A. P. Smith(cid:63) 
+
+威廉A. P.史密斯（cid：63）
+
+
+
+Timo Bolkart† 
+
+Timo Bolkart†
+
+
+
+Stefanie Wuhrer‡ 
+
+Stefanie Wuhrer‡
+
+
+
+{ab1792, william.smith}@york.ac.uk 
+
+{ab1792，william.smith}@york.ac.uk
+
+
+
+(cid:63) Department of Computer Science, University of York, UK † Multimodal Computing and Interaction, Saarland University, Germany ‡ Morpheo Team, INRIA Grenoble Rhˆone-Alpes, France 
+
+（cid：63）英国约克大学计算机科学系†德国萨尔大学多模式计算与互动‡Morpheo团队，INRIA格勒诺布尔罗纳 - 阿尔卑斯大区，法国
+
+
+
+tbolkart@mmci.uni-saarland.de 
+
+
+
+
+
+stefanie.wuhrer@inria.fr 
+
+
+
+
+
+Abstract. In this paper we explore the problem of ﬁtting a 3D morphable model to single face images using only sparse geometric features (edges and landmark points). Previous approaches to this problem are based on nonlinear optimisation of an edge-derived cost that can be viewed as forming soft correspondences between model and image edges. We propose a novel approach, that explicitly computes hard correspondences. The resulting ob jective function is non-convex but we show that a good initialisation can be obtained eﬃciently using alternating linear least squares in a manner similar to the iterated closest point algorithm. We present experimental results on both synthetic and real images and show that our approach outperforms methods that use soft correspondence and other recent methods that rely solely on geometric features. 
+
+抽象。在本文中，我们探讨了仅使用稀疏几何特征（边缘和界标点）将3D形变模型拟合成单人脸图像的问题。此问题的先前方法基于边缘导出成本的非线性优化，可被视为形成模型和图像边缘之间的软对应关系。我们提出了一种新颖的方法，明确计算出难以对应的信件。由此得到的观测函数是非凸的，但我们表明，可以有效地使用交替线性最小二乘法以类似于迭代最近点算法的方式获得良好的初始化。我们在合成和真实图像上展示实验结果，并显示我们的方法优于使用软对应和仅依赖几何特征的其他最新方法的方法。
+
+
+
+1 Introduction 
+
+1介绍
+
+
+
+Estimating 3D face shape from one or more 2D images is a longstanding problem in computer vision. It has a wide range of applications from pose-invariant face recognition [1] to creation of 3D avatars from 2D images [2]. One of the most successful approaches to this problem is to use a statistical model of 3D face shape [3]. This transforms the problem of shape estimation to one of model ﬁtting and provides a strong statistical prior to constrain the problem. The model ﬁtting ob jective can be formulated in various ways, the most obvious being an analysis-by-synthesis approach in which appearance error is directly optimised [3]. However, feature-based methods [4,5] are in general more robust and lead to optimisation problems less prone to convergence on local minima. In this paper, we focus on ﬁtting to edge features in images. Image edges convey important information about a face. The occluding boundary provides direct information about 3D shape, for example a proﬁle view reveals strong information about the shape of the nose. Internal edges, caused by texture changes, high curvature or self occlusion, provide information about the 
+
+从一个或多个2D图像估计3D脸部形状是计算机视觉中长期存在的问题。它具有从姿态不变的人脸识别[1]到从2D图像创建3D头像的广泛应用[2]。解决这个问题最成功的方法之一就是使用三维脸形的统计模型[3]。这将形状估计问题转化为模型拟合问题，并在约束问题之前提供强大的统计。客观的模型可以用不同的方式来表达，最明显的是一种综合分析的方法，其中外观误差是直接优化的[3]。然而，基于特征的方法[4,5]通常更加健壮，并且导致优化问题在局部最小值时不易收敛。在本文中，我们重点研究图像中的边缘特征。图像边缘传达有关人脸的重要信息。遮挡边界提供有关3D形状的直接信息，例如，配置文件视图显示关于鼻子形状的强大信息。内部边缘，由纹理变化，高曲率或自遮挡引起，提供有关信息
+
+
+
+2 
+
+2
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+position and shape of features such as lips, eyebrows and the nose. This information provides a cue for estimating 3D face shape from 2D images or, more generally, for ﬁtting face models to images. In Section 2 we introduce relevant background. In Section 3 we present a method for ﬁtting to landmarks with known model correspondence. Our key contribution is in Section 4 where we present a novel, fully automatic algorithm for ﬁtting to image edges with hard correspondence. By hard correspondence, we mean that an explicit correspondence is computed between pro jected model vertex and edge pixel. For comparison, in Section 5 we describe our variant of previous methods [4,6,7] that ﬁt to edges using soft correspondence. By soft correspondence, we mean that an energy term that captures many possible edge correspondences is minimised. Finally, we compare the two approaches experimentally and others from the recent literature in Section 6. 
+
+位置和形状的特征，如嘴唇，眉毛和鼻子。这些信息提供了从2D图像估计3D人脸形状的线索，或者更一般地说，用于将人脸模型拟合成图像。在第2节中，我们介绍相关背景。在第3节中，我们提出了一种用已知模型对应关系对地标进行拟合的方法。我们的主要贡献是在第4部分，我们提出了一种新颖的，全自动算法，用于配合硬对应的图像边缘。通过硬对应，我们的意思是在投影模型顶点和边缘像素之间计算明确的对应关系。为了比较，在第5节中，我们描述了我们对以前方法的变体[4,6,7]，它们适用于使用软对应的边缘。通过软对应，我们的意思是捕获许多可能的边缘对应关系的能量项被最小化。最后，我们将实验的两种方法和第6节最近文献中的其他方法进行比较。
+
+
+
+1.1 Related Work 
+
+1.1相关工作
+
+
+
+Landmark ﬁtting 2D landmarks have long been used as a way to initialize a morphable model ﬁt [3]. Breuer et al. [8] obtained this initialisation using a landmark detector providing a fully automatic system. More recently, landmarks have been shown to be suﬃcient for obtaining useful shape estimates in their own right [9]. Furthermore, noisily detected landmarks can be ﬁltered using a model [10] and automatic landmark detection can be integrated into a ﬁtting algorithm [11]. In a similar manner to landmarks, local features can be used to aid the ﬁtting process [5]. Edge ﬁtting An early example of using image edges for face model ﬁtting is the Active Shape Model (ASM) [12] where a 2D boundary model is aligned to image edges. In 3D, contours have been used directly for 3D face shape estimation [13] and indirectly as a feature for ﬁtting a 3DMM. The earliest work in this direction was due to Moghaddam et al. [14] who ﬁtted a 3DMM to silhouettes extracted from multiple views. From a theoretical standpoint, L¨uthi et al. [15] explored to what degree face shape is constrained when contours are ﬁxed. Romdhani et al. [4] include an edge distance cost as part of a hybrid energy function. Texture and outer (silhouette) contours are used in a similar way to LM-ICP [16] where correspondence between image edges and model contours is “soft”. This is achieved by applying a distance transform to an edge image. This provides a smoothly varying cost surface whose value at a pixel indicates the distance (and its gradient, the direction) to the closest edge. This idea was extended by Amberg et al. [6] who use it in a multi-view setting and smooth the edge distance cost by averaging results with diﬀerent parameters. In this way, the cost surface also encodes the saliency of an edge. Keller et al. [7] showed that such approaches lead to a cost function that is neither continuous nor diﬀerentiable. This suggests the optimisation method must be carefully chosen. Edge features have also been used in other ways. Cashman and Fitzgibbon [17] learn a 3DMM from 2D images by ﬁtting to silhouettes. Zhu et al. [18] present a method that can be seen as a hybrid of landmark and edge ﬁtting. Landmarks that deﬁne boundaries are allowed to slide over the 3D face surface 
+
+长久以来，地标拟合2D地标一直被用作初始化可变形模型的一种方法[3]。 Breuer等人[8]使用提供全自动系统的界标探测器获得了初始化。最近，地标已被证明足以获得有用的形状估计[9]。此外，可以使用模型对大量检测到的地标进行滤波[10]，并将自动地标检测集成到拟合算法中[11]。与地标相似，局部特征可以用来辅助配合过程[5]。边缘融合使用图像边缘进行人脸模型拟合的早期实例是主动形状模型（ASM）[12]，其中2D边界模型与图像边缘对齐。在3D中，轮廓直接用于3D人脸形状估计[13]，间接用于拟合3DMM。在这方面最早的工作是由于Moghaddam等人。 [14]谁从3DMM中提取了从多个视图中提取的轮廓。从理论的角度来看，Lüuthi等人[15]探讨了当等高线固定时，面形的限制程度。 Romdhani等人[4]包括边缘距离成本作为混合能量函数的一部分。纹理和外部（轮廓）轮廓以与LM-ICP [16]类似的方式使用，其中图像边缘和模型轮廓之间的对应关系是“柔软的”。这是通过对边缘图像应用距离变换来实现的。这提供了平滑变化的成本表面，其在像素处的值表示距离最近边缘的距离（及其梯度，方向）。 Amberg等人对这个想法进行了扩展。 [6]谁在多视图设置中使用它，并通过平均具有不同参数的结果来平滑边缘距离成本。这样，成本曲面也编码边缘的显着性。 Keller等人[7]表明，这种方法导致成本函数既不连续也不可忽略。这表明优化方法必须慎重选择。边缘特征也被用于其他方面。 Cashman和Fitzgibbon [17]通过拟合轮廓从2D图像学习3DMM。朱等人[18]提出了一种可以被看作是地标和边缘融合的方法。定义边界的地标被允许在3D人脸表面上滑动
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+3 
+
+3
+
+
+
+during ﬁtting. A recent alternative to optimisation-based approaches is to learn a regressor from extracted face contours to 3DMM shape parameters [19]. Fitting a 3DMM to a 2D image using only geometric features (i.e. landmarks and edges) is essentially a non-rigid alignment problem. Surprisingly, the idea of employing an iterated closest point [20] approach with hard edge correspondences (in a similar manner to ASM ﬁtting) has been discounted in the literature [4]. In this paper, we pursue this idea and develop an iterative 3DMM ﬁtting algorithm that is fully automatic, simple and eﬃcient (and we make our implementation available1 ). Instead of working in a transformed distance-to-edge space and treating correspondences as “soft”, we compute an explicit correspondence between model and image edges. This allows us to treat the model edge vertices as a landmark with known 2D position, for which optimal pose or shape estimates can be easily computed. State of the art The most recent face shape estimation methods are able to obtain considerably higher quality results than the purely model-based approaches above. They do so by using pixel-wise shading or motion information to apply ﬁnescale reﬁnement to an initial shape estimate. For example, Suwa janakorn et al. [21] use photo collections to build an average model of an individual which is then ﬁtted to a video and ﬁnescale detail added by optical ﬂow and shape-fromshading. Cao et al. [22] take a machine learning approach and train a regressor that predicts high resolution shape detail from local appearance. Our aim in this paper is not to compete directly with these methods. Rather, we seek to understand what quality of face reconstruction it is possible to obtain using solely sparse, geometric information. The output of our method may provide a better initialisation for state of the art reﬁnement techniques or remove the need to have a person speciﬁc model. 
+
+在配合期间。最近一种基于优化方法的替代方法是从提取的人脸轮廓学习到3DMM形状参数[19]。仅使用几何特征（即地标和边缘）将3DMM拟合到2D图像本质上是非刚性对准问题。令人惊讶的是，采用迭代最近点[20]方法与硬边对应（与ASM拟合类似的方法）的想法在文献[4]中被忽略了。在本文中，我们追求这一想法并开发了一种全自动，简单且高效的迭代3DMM拟合算法（并且我们使得我们的实现可用1）。我们不是在变换的距离边缘空间中工作，而是将对应关系视为“软”，我们计算模型和图像边缘之间的明确对应关系。这允许我们将模型边缘顶点视为具有已知2D位置的界标，为此可以容易地计算出最佳姿态或形状估计。现有技术最新的面部形状估计方法能够获得比上面的纯粹基于模型的方法高得多的质量结果。他们通过使用以像素为单位的阴影或运动信息来将初始形状估算应用于初始形状估计。例如，Su访janakorn等人。 [21]使用照片集合建立一个个人的平均模型，然后将这个模型加入到视频和细节细节中，这些细节由光流和shape-fromShading添加。曹等人。 [22]采取机器学习的方法，并培训一个回归者，从本地外观预测高分辨率的形状细节。我们在这篇论文中的目的不是直接与这些方法竞争。相反，我们试图了解只使用稀疏的几何信息就可以获得什么质量的重建。我们的方法的输出可以为最先进的改进技术提供更好的初始化，或者不需要建立一个人特定的模型。
+
+
+
+2 Preliminaries 
+
+2预赛
+
+
+
+Our approach is based on ﬁtting a 3DMM to face images under the assumption of a scaled orthographic pro jection. Hence, we begin by introducing scaled orthographic pro jection and 3DMMs. 
+
+我们的方法是基于在假定缩放字形投影的情况下拟合3DMM来面对图像。因此，我们从引入缩放正射投影和3DMM开始。
+
+
+
+2.1 Scaled Orthographic Pro jection 
+
+2.1缩放正射投影
+
+
+
+The scaled orthographic, or weak perspective, pro jection model assumes that variation in depth over the ob ject is small relative to the mean distance from camera to ob ject. Under this assumption, the pro jected 2D position of a 3D point v = [u v w]T given by SOP[v, R, t, s] ∈ R2 does not depend on the distance of the point from the camera, but only on a uniform scale s given by the ratio of the focal length of the camera and the mean distance from camera to ob ject: 
+
+缩放正射影像或弱视角投影模型假定相对于从相机到对象的平均距离，对象的深度变化较小。在这个假设下，由SOP [v，R，t，s]∈R2给出的三维点v \x3d [uvw] T的投影2D位置并不取决于该点距相机的距离，而仅取决于由相机焦距与相机到物体的平均距离之比给出的均匀尺度s：
+
+
+
+(cid:21) 
+
+（CID：21）
+
+
+
+(cid:20) 1 0 0 0 1 0 
+
+（cid：20）1 0 0 0 1 0
+
+
+
+SOP[v, R, t, s] = s 
+
+SOP [v，R，t，s] \x3d s
+
+
+
+Rv + st 
+
+Rv + st
+
+
+
+(1) 
+
+（1）
+
+
+
+1 Matlab implementation: github.com/waps101/3DMM edges 
+
+1 Matlab实现：github.com/waps101/3DMM边缘
+
+
+
+4 
+
+4
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+where the pose parameters R ∈ R3×3 , t ∈ R2 and s ∈ R+ are a rotation matrix, 2D translation and scale respectively. 
+
+其中姿态参数R∈R3×3，t∈R2和s∈R +分别为旋转矩阵，2D平移和刻度。
+
+
+
+2.2 
+
+2.2
+
+
+
+3D Morphable Model 
+
+3D形变模型
+
+
+
+A 3D morphable model is a deformable mesh whose shape is determined by the shape parameters α ∈ RS . Shape is described by a linear model learnt from data using Principal Components Analysis (PCA). So, the shape of any face can be approximated as: 
+
+3D形变模型是形状由形状参数α∈RS确定的可变形网格。形状通过使用主成分分析（PCA）从数据中学习的线性模型来描述。所以，任何脸部的形状可以近似为：
+
+
+
+f (α) = Pα + ¯f , (2) where P ∈ R3N ×S contains the S principal components, ¯f ∈ R3N is the mean shape and the vector f (α) ∈ R3N contains the coordinates of the N vertices, stacked to form a long vector: f = [u1 v1 w1 . . . uN vN wN ]T . Hence, the ith vertex is given by: vi = [f3i−2 f3i−1 f3i ]T . For convenience, we denote the submatrix corresponding to the ith vertex as Pi ∈ R3×S and the corresponding vertex in the mean face shape as ¯fi ∈ R3 , such that the ith vertex is given by: vi = Piα + ¯fi . Similarly, we deﬁne the row corresponding to the u component of the ith vertex as Piu (similarly for v and w) and deﬁne the u component of the ith mean shape vertex as ¯fiu (similarly for v and w). 
+
+f（α）\x3dPα+¯f，（2）其中P∈R3N×S包含S个主成分，ff∈R3N是平均形状，矢量f（α）∈R3N包含N个顶点的坐标，堆叠形成一个长矢量：f \x3d [u1 v1 w1。 。 。 uN vN wN] T。因此，第i个顶点由下式给出：vi \x3d [f3i-2 f3i-1 f3i] T。为方便起见，我们将与第i个顶点对应的子矩阵表示为Pi∈R3×S，并将平均人脸形状中对应的顶点表示为∈fi∈R3，使得第i个顶点由下式给出：vi \x3dPiα+¯fi。同样，我们将与第i个顶点的u分量相对应的行定义为Piu（类似于v和w），并将第i个平均形状顶点的u分量定义为¯fiu（类似于v和w）。
+
+
+
+3 Fitting with Known Correspondence 
+
+3与已知函数拟合
+
+
+
+We begin by showing how to ﬁt a morphable model to L observed 2D positions xi = [xi yi ]T (i = 1 . . . L) arising from the pro jection of corresponding vertices in the morphable model. We discuss in Section 4 how these correspondences are obtained in practice. Without loss of generality, we assume that the ith 2D position corresponds to the ith vertex in the morphable model. The ob jective of ﬁtting a morphable model to these observations is to obtain the shape and pose parameters that minimise the repro jection error, Elmk , between observed and predicted 2D positions: (cid:107)xi − SOP (cid:2)Piα + ¯fi , R, t, s(cid:3) (cid:107)2 . 
+
+我们首先展示如何将形变模型拟合成L观测到的2D位置xi \x3d [xi yi] T（i \x3d 1 ... L），这是由形变模型中相应顶点的投影引起的。我们在第4节讨论如何在实践中获得这些通信。不失一般性，我们假设第二维位置对应于变形模型中的第i个顶点。将形变模型拟合到这些观测值的目标是获得形状和姿态参数，以使观察到的和预测的2D位置之间的再现误差Elmk最小化：（cid：107）xi-SOP（cid：2）Piα+ fifi，R，t，s（cid：3）（cid：107）2。
+
+
+
+Elmk (α, R, t, s) = 
+
+Elmk（α，R，t，s）\x3d
+
+
+
+(3) 
+
+（3）
+
+
+
+L(cid:88) 
+
+L（CID：88）
+
+
+
+i=1 
+
+I \x3d 1
+
+
+
+1 L 
+
+1升
+
+
+
+The scale factor in front of the summation makes the magnitude of the error invariant to the number of landmarks. This problem is multilinear in the shape parameters and the SOP transformation matrix. It is also nonlinearly constrained, since R must be a valid rotation matrix. Although minimising Elmk is a non-convex optimisation problem, a good initialisation can be obtained using alternating linear least squares and this estimate subsequently reﬁned using nonlinear optimisation. This is the approach that we take. 
+
+总和前面的比例因子使得误差的大小与地标的数量不变。这个问题在形状参数和SOP变换矩阵中是多线性的。它也是非线性约束的，因为R必须是一个有效的旋转矩阵。尽管最小化Elmk是一个非凸优化问题，但是使用交替线性最小二乘可以获得良好的初始化，并且随后使用非线性优化来重新定义这个估计。这是我们采取的方法。
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+5 
+
+五
+
+
+
+3.1 Pose Estimation 
+
+3.1姿势估计
+
+
+
+We make an initial estimate of R, t and s using a simple extension of the POS algorithm [23]. Compared to POS, we additionally enforce that R is a valid rotation matrix. We begin by solving an unconstrained system in a least squares sense. We stack two copies of the 3D points in homogeneous coordinates, such that A2i−1 = [ui vi wi 1 0 0 0 0] and A2i = [0 0 0 0 ui vi wi 1] and form a long vector of the corresponding 2D points d = [x1 y1 · · · xL yL ]T . We then solve for k ∈ R8 in Ak = d using linear least squares. We deﬁne r1 = [k1 k2 k3 ] and r2 = [k5 k6 k7 ]. Scale is given by s = ((cid:107)r1 (cid:107) + (cid:107)r2(cid:107))/2 and the translation vector by t = [k4/s k8 /s]T . We perform singular value decomposition on the matrix formed from r1 and r2 : 
+
+我们使用POS算法的简单扩展[23]对R，t和s进行初始估计。与POS相比，我们另外强制R是一个有效的旋转矩阵。我们从最小二乘意义上解开一个无约束的系统开始。我们将三个点的两个副本叠加在齐次坐标中，使得A2i-1 \x3d [ui vi wi 1 0 0 0 0]和A2i \x3d [0 0 0 0 ui vi wi 1]并形成相应2D的长矢量点d \x3d [x1 y1 ... xL yL] T。然后用线性最小二乘法求解Ak \x3d d中的k∈R8。我们定义r1 \x3d [k1 k2 k3]和r2 \x3d [k5 k6 k7]。比例由s \x3d（（cid：107）r1（cid：107）+（cid：107）r2（cid：107））/ 2给出，平移矢量由t \x3d [k4 / s k8 / s] T给出。我们对由r1和r2形成的矩阵执行奇异值分解：
+
+
+
+USVT = 
+
+USVT \x3d
+
+
+
+r2 r1 × r2 The rotation matrix is given by R = UVT . If det(R) = −1 then we negate the third row of U and recompute R. This guarantees that R is a valid rotation matrix. This approach gives a good initial estimate which we subsequently reﬁne with nonlinear optimization of Elmk with respect to R, t and s. 
+
+r2 r1×r2旋转矩阵由R \x3d UVT给出。如果det（R）\x3d -1，则我们否定U的第三行并重新计算R.这保证了R是一个有效的旋转矩阵。这种方法给出了一个很好的初始估计，我们随后用Elmk关于R，t和s的非线性优化来进行修正。
+
+
+
+(4) 
+
+（4）
+
+
+
+ r1 
+
+r1
+
+
+
+ 
+
+
+
+
+
+3.2 Shape Estimation 
+
+3.2形状估计
+
+
+
+With a ﬁxed pose estimate, shape parameter estimation under scaled orthographic pro jection is a linear problem. The 2D position of the ith vertex as a function of the shape parameters is given by: sR1..2 (Piα + ¯fi ) + st. Hence, each observed vertex adds two equations to a linear system. Concretely, for each image we form the matrix C ∈ R2L×S where 
+
+使用固定姿态估计，缩放正射投影下的形状参数估计是线性问题。作为形状参数的函数的第i个顶点的2D位置由下式给出：sR1..2（Piα+ fifi）+ st。因此，每个观测顶点将两个方程式添加到线性系统。具体地说，对于每个图像我们形成矩阵C∈R2L×S其中，
+
+
+
+C2i−1 = s(R11PT 
+
+C2i-1 \x3d s（R11PT
+
+
+
+iu + R12PT iv + R13PT iw ) 
+
+iu + R12PT iv + R13PT iw）
+
+
+
+and 
+
+和
+
+
+
+C2i = s(R21PT and vector h ∈ R2L where h2i−1 = xi − s(R1 
+
+C2i \x3d s（R21PT和向量h∈R2L其中h2i-1 \x3d xi-s（R1
+
+
+
+iu + R22PT iv + R23PT iw ) 
+
+iu + R22PT iv + R23PT iw）
+
+
+
+¯fi + t1 ) and h2i = yi − s(R2 
+
+fifi + t1）和h2i \x3d yi  -  s（R2
+
+
+
+¯fi + t2 ). 
+
+fifi + t2）。
+
+
+
+We solve Cα = h in a least squares sense sub ject to an additional constraint to ensure plausibility of the solution. We follow Brunton et al. [24] and use a hyperbox constraint on the shape parameters. This avoids having to choose a regularisation weight but ensures that each parameter lies within k standard deviations of the mean by introducing a linear inequality constraint on the shape parameters (we use k = 3 in our experiments). Hence, the problem can be solved in closed form as an inequality constrained linear least squares problem. 
+
+我们在最小二乘意义上解决Cα\x3d h的附加约束条件，以确保解的合理性。我们关注Brunton等人。 [24]并在形状参数上使用超箱子约束。这避免了必须选择正则化权重，但通过在形状参数（我们在实验中使用k \x3d 3）引入线性不等式约束来确保每个参数位于均值的k个标准偏差内。因此，该问题可以作为一个不等式约束线性最小二乘问题以封闭形式解决。
+
+
+
+6 
+
+6
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+3.3 Nonlinear Reﬁnement 
+
+3.3非线性补偿
+
+
+
+Having alternated pose and shape estimation for a ﬁxed number of iterations, ﬁnally we perform nonlinear optimisation of Elmk over α, R, t and s simultaneously. We represent R in axis-angle space to ensure that it remains a valid rotation matrix and we retain the hyperbox constraint on α. We minimise Elmk using the trust-region-reﬂective algorithm [25] as implemented in the Matlab lsqnonlin function. 
+
+对固定次数的迭代进行交替的姿态和形状估计，最后我们同时对α，R，t和s执行Elmk的非线性优化。我们在轴角空间中表示R，以确保它仍然是一个有效的旋转矩阵，并保留α上的超盒限制。我们用Matlab lsqnonlin函数中实现的信赖域反射算法[25]来最小化Elmk。
+
+
+
+4 Fitting with Hard Edge Correspondence 
+
+4与硬边对应的拟合
+
+
+
+The method in Section 3 enables a 3DMM to be ﬁtted to 2D landmark positions if the correspondence between landmarks and model vertices is known. Edges, for example caused by occluding boundaries, do not have a ﬁxed correspondence to model vertices. Hence, ﬁtting to edges requires shape and pose estimation to happen in conjunction with establishing correspondence between image and model edges. Our proposed approach establishes these correspondences explicitly by ﬁnding the closest image edge to each model boundary vertex (sub ject to additional ﬁltering to remove unreliable matches). Our method comprises the following steps: 
+
+如果地标和模型顶点之间的对应关系已知，则第3节中的方法可使3DMM适用于2D地标位置。例如由遮挡边界引起的边缘不具有与模型顶点的固定对应关系。因此，拟合边缘需要形状和姿态估计与建立图像和模型边缘之间的对应关系。我们提出的方法通过向每个模型边界顶点发现最接近的图像边缘来明确地建立这些对应关系（除了用于去除不可靠匹配的附加滤波以外）。我们的方法包括以下步骤：
+
+
+
+1. Detect facial landmarks 2. Initialise shape and pose estimates by ﬁtting to landmarks only 3. Improve initialisation using iterated closest edge ﬁtting 4. Nonlinear optimisation of hybrid ob jective function containing landmark, edge and prior terms 
+
+1.检测面部标志2.初始化形状并仅通过拟合地标进行姿态估计3.使用迭代最近边缘拟合改进初始化4.包含地标，边缘和先验项的混合观测函数的非线性优化
+
+
+
+We describe each of these steps in more detail in the rest of this section. 
+
+我们在本节的其余部分更详细地描述这些步骤中的每一个。
+
+
+
+4.1 Landmarks 
+
+4.1地标
+
+
+
+We use landmarks both for initialisation and as part of our overall ob jective function as one cue for shape estimation. We apply a facial landmark detector that is suitable for operating on “in the wild” images. This provides approximate positions of facial landmarks for which we know the corresponding vertices in the morphable model. We use these landmark positions to make an initial estimate of the pose and shape parameters by running the method in Section 3 with only these corresponding landmark positions. Note that any facial landmark detector can be used at this stage. In our experiments, we show results with a recent landmark detection algorithm [26] that achieves state-of-the-art performance and for which code is provided by the authors. In our experimental evaluation, we include the results of ﬁtting to landmarks only. 
+
+我们使用地标进行初始化，并将其作为整体目标函数的一部分，作为形状估计的一个提示。我们应用适合在“野外”图像上操作的面部标志性检测器。这提供了我们知道形变模型中的对应顶点的面部地标的大概位置。我们使用这些地标位置，通过运行第3部分中的方法仅对这些相应的地标位置进行姿态和形状参数的初始估计。请注意，在此阶段可以使用任何面部标志检测器。在我们的实验中，我们用最近的标志性检测算法[26]显示结果，该算法实现了最先进的性能，并由作者提供了代码。在我们的实验评估中，我们只包括对地标的拟合结果。
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+7 
+
+7
+
+
+
+4.2 Edge Cost 
+
+4.2边缘成本
+
+
+
+We assume that a subset of pixels have been labelled as edges and stored as the set E = {(x, y)|(x, y) is an edge}. In practice, we compute edges by applying the Canny edge detector with a ﬁxed threshold to the input image. Model contours are computed based on the pose and shape parameters as B(α, R, t, s), are deﬁned as those lying on a mesh edge whose adjacent faces the occluding boundary of the 3D face. The set of occluding boundary vertices, have a change of visibility. This deﬁnition encompasses both outer (silhouette) and inner (self-occluding) contours. Since the viewing direction is aligned with the z -axis, this is tested simply by checking if the sign of the z -component of the triangle normal changes on either side of the edge. In addition, we check that potential edge vertices are not occluded by another part of the mesh (using zbuﬀering) and we ignore edges that lie on a mesh boundary since they introduce artiﬁcial edges. In this paper, we deal only with occluding contours (both inner and outer). If texture contours were deﬁned on the surface of the morphable model, it would be straightforward to include these in our approach. We deﬁne the ob jective function for edge ﬁtting with hard correspondence as the sum of squared distances between each pro jected occluding boundary vertex and the closest edge pixel: (cid:107)[x y ]T − SOP (cid:2)Piα + ¯fi , R, t, s(cid:3) (cid:107)2 . 
+
+我们假设像素的一个子集已被标记为边并存储为集E \x3d {（x，y）|（x，y）是边}。实际上，我们通过对输入图像应用具有固定阈值的Canny边缘检测器来计算边缘。模型轮廓根据B（α，R，t，s）的姿态和形状参数进行计算，定义为位于网格边缘的网格边缘，其相邻的网格边界面对3D面部的遮挡边界。遮挡边界顶点的集合具有可见性的改变。这个定义包括外部（轮廓）和内部（自闭塞）轮廓。由于观察方向与z轴对齐，因此只需检查三角形法线z分量的符号是否在边的任一侧发生变化即可进行测试。另外，我们检查潜在的边缘顶点没有被网格的另一部分遮挡（使用zbufring），并且我们忽略了位于网格边界上的边缘，因为它们引入了人造边缘。在本文中，我们只处理遮挡轮廓（内部和外部）。如果纹理轮廓被定义在形变模型的表面上，那么在我们的方法中包括这些将是直接的。我们将边缘拟合的目标函数用硬对应定义为每个投影遮挡边界顶点与最近边缘像素之间的平方距离总和：（cid：107）[xy] T-SOP（cid：2）Piα+¯ fi，R，t，s（cid：3）（cid：107）2。
+
+
+
+Eedge (α, R, t, s) = 1 |B(α, R, t, s)| 
+
+Eedge（α，R，t，s）\x3d 1 | B（α，R，t，s）|
+
+
+
+(cid:88) 
+
+（CID：88）
+
+
+
+(5) 
+
+（5）
+
+
+
+i∈B(α,R,t,s) 
+
+i∈B（α，R，T，S）
+
+
+
+min 
+
+分
+
+
+
+(x,y)∈E 
+
+（X，Y）∈E
+
+
+
+Note that the minimum operator is responsible for computing the hard correspondences. This ob jective is non-convex since the minimum of a set of convex functions is not convex [27]. Hence, we require a good initialisation to ensure convergence to a minimum close to the global optimum. Fitting to landmarks only does not provide a suﬃciently good initialisation. So, in the next subsection we describe a method for obtaining a good initial ﬁt to edges, before incorporating the edge cost into a hybrid ob jective function in Section 4.5. 
+
+请注意，最小的操作员负责计算硬对应关系。由于一组凸函数的最小值不是凸的，所以这个观测值是非凸的[27]。因此，我们需要一个良好的初始化来确保收敛到接近全局最优的最小值。只适合地标不能提供足够好的初始化。因此，在下一小节中，我们将描述一种方法，用于在第4.5节将边缘成本合并到混合目标函数中之前，获得良好的边缘初始融合。
+
+
+
+4.3 
+
+4.3
+
+
+
+Iterated Closest Edge Fitting 
+
+迭代最近边的拟合
+
+
+
+We propose to reﬁne the landmark-only ﬁt with an initial ﬁt to edges that works in an iterated closest point manner. That is, for each pro jected model contour vertex, we ﬁnd the closest image edge pixel and we treat this as a known correspondence. In conjunction with the landmark correspondences, we again run the method in Section 3. This leads to updated pose and shape parameters, and in turn to updated model edges and correspondences. We iterate this process for a ﬁxed number of iterations. We refer to this process as Iterated Closest Edge Fitting (ICEF) and provide an illustration in Figure 1. On the left we show an input image with the initial landmark detection result. In the middle we show the initial shape and pose obtained by ﬁtting only to landmarks. On the right we show image edge pixels in blue and pro jected model contours in green (where 
+
+我们建议将具有里程碑意义的装备用最初的装备进行改造，以便以迭代的最近点方式工作。也就是说，对于每个投影模型轮廓顶点，我们找到最接近的图像边缘像素，并将其视为已知的对应关系。结合地标对应关系，我们再次运行第3节中的方法。这会导致更新的姿态和形状参数，并转而更新模型边缘和对应关系。我们迭代这个过程以进行固定次数的迭代。我们将此过程称为迭代最近边拟合（ICEF），并在图1中提供了一个图示。在左侧，我们显示了具有初始界标检测结果的输入图像。在中间，我们展示了通过仅限于地标获得的初始形状和姿势。在右侧，我们以蓝色显示图像边缘像素，并以绿色显示投影模型轮廓（其中
+
+
+
+8 
+
+8
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+Fig. 1. Iterated closest edge ﬁtting for initialisation of the edge ﬁtting process. Left: input image with automatically detected landmarks. Middle: overlaid shape obtained by ﬁtting only to landmark. Right: image edges in blue, model boundary vertices with image correspondences in green, unreliable correspondences in red. 
+
+图1.边缘配合过程的初始化的迭代最近边缘配合。左：输入图像自动检测地标。中间：通过仅限于地标获得的叠加形状。右图：以蓝色图像边缘，以绿色图像对应的模型边界顶点，以红色显示不可靠对应。
+
+
+
+nearest neighbour edge correspondence is considered reliable) and in red (where correspondence is considered unreliable). The green/blue correspondences are used for the next iteration of ﬁtting. 
+
+最近邻居边缘对应被认为是可靠的）并且以红色（其中对应被认为不可靠）。绿色/蓝色对应用于下一次配合的迭代。
+
+
+
+Finding the image edge pixel closest to a pro jected contour vertex can be done eﬃciently by storing the image edge pixels in a kd-tree. We ﬁlter the resulting correspondences using two commonly used heuristics. First, we remove 5% of the matches for which the distance to the closest image edge pixel is largest. Second, we remove matches for which the image distance divided by s exceeds a threshold (chosen as 10 in our experiments). The division by scale factor s makes this choice invariant to changes in image resolution. 
+
+通过将图像边缘像素存储在kd树中，可以高效地完成寻找与投影轮廓顶点最接近的图像边缘像素。我们使用两个常用的启发式来对所得到的对应关系进行筛选。首先，我们移除距最近图像边缘像素距离最大的5％匹配。其次，我们删除图像距离除以s的匹配超过阈值（在我们的实验中选为10）。按比例因子s进行划分使得该选择对图像分辨率的变化不变。
+
+
+
+4.4 Prior 
+
+4.4之前
+
+
+
+Under the assumption that the training data of the 3DMM forms a Gaussian cloud in high dimensional space, then we expect that each of the shape parameters follows a normal distribution with zero mean and variance given by the eigenvalue, λi , associated with the corresponding principal component. We ﬁnd that including a prior term that captures this assumption signiﬁcantly improves performance over using the hyperbox constraint alone. The prior penalises deviation from the mean shape as follows: 
+
+在3DMM的训练数据在高维空间形成高斯云的假设下，我们期望每个形状参数遵循具有零均值的正态分布，并且由与相应主分量关联的特征值λi给出的方差。我们发现，包括一个可以捕获这个假设的前期术语能够显着提高单独使用超框约束的性能。事先处罚与平均形状的偏差如下：
+
+
+
+(cid:19)2 
+
+（CID：19）2
+
+
+
+Eprior (α) = 
+
+Eprior（α）\x3d
+
+
+
+. 
+
+。
+
+
+
+(6) 
+
+（6）
+
+
+
+(cid:18) αi√ 
+
+（cid：18）αi√
+
+
+
+λi 
+
+λI
+
+
+
+S(cid:88) 
+
+S（CID：88）
+
+
+
+i=1 
+
+I \x3d 1
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+9 
+
+9
+
+
+
+Fig. 2. Edge cost surface with soft correspondence (right) computed from input image (left) 
+
+图2.从输入图像计算得到的软对应的边缘成本曲面（右）（左）
+
+
+
+4.5 Nonlinear Reﬁnement 
+
+4.5非线性补偿
+
+
+
+Finally, we perform nonlinear optimisation of a hybrid ob jective function comprising landmark, edge and prior terms: 
+
+最后，我们对包含地标，边缘和先验项的混合观测函数进行非线性优化：
+
+
+
+E (α, R, t, s) = w1Elmk (α, R, t, s) + w2Eedge (α, R, t, s) + w3Eprior (α), 
+
+E（α，R，t，s）\x3d w1Elmk（α，R，t，s）+ w2Eedge（α，R，t，s）+ w3Eprior（α），
+
+
+
+(7) 
+
+（7）
+
+
+
+where w1 , w2 and w3 weight the contribution of each term to the overall energy. The landmark and edge terms are invariant to the number of landmarks and edge vertices which means we do not have to tune the weights for each image (for example, for the results in Table 1 we use ﬁxed values of: w1 = 0.15, w2 = 0.45 and w3 = 0.4). We retain the hyperbox constraint and so the hybrid ob jective is a constrained nonlinear least squares problem and we again optimise using the trust-region-reﬂective algorithm. For eﬃciency and to avoid problems of continuity and diﬀerentiability of the edge cost function, we follow [6] and keep occluding boundary vertices, B , ﬁxed for a number of iterations of the optimiser. After a number of iterations, we recompute the vertices lying on the occluding boundary and restart the optimiser. 
+
+其中w1，w2和w3加权每项对整体能量的贡献。地标和边界项对于地标和边缘顶点的数量是不变的，这意味着我们不必调整每个图像的权重（例如，对于表1中的结果，我们使用固定值：w1 \x3d 0.15，w2 \x3d 0.45和w3 \x3d 0.4）。我们保留超盒子约束，所以混合观测值是一个约束非线性最小二乘问题，我们再次使用信赖区域反射算法进行优化。为了提高效率并避免边缘成本函数的连续性和不可分性问题，我们遵循[6]并保持封闭边界顶点B固定用于优化器的多次迭代。经过多次迭代后，我们重新计算位于遮挡边界上的顶点并重新启动优化器。
+
+
+
+5 Fitting with Soft Edge Correspondence 
+
+5软边对应的拟合
+
+
+
+We compare our approach with a method based on optimising an edge cost function, in the same spirit as previous work [6,7,4]. We follow the same approach as Amberg et al. [6] to compute the edge cost function, however we further improve robustness by also integrating over scale. For our edge detector, we use edge detector sensitivity thresholds T and scales S , we compute n = |T × S | gradient magnitude thresholding with non-maxima suppression. Given a set of edge images, E 1 , . . . , E n , using each pair of image scale and threshold values. We compute the Euclidean distance transform, D1 , . . . , Dn , for each edge image (i.e. the value of each pixel in Di is the distance to the closest edge pixel in E i ). Finally, we compute the edge cost surface as: 
+
+我们将我们的方法与基于优化边缘成本函数的方法进行了比较，与以前的工作一样[6,7,4]。我们遵循与Amberg等人相同的方法。 [6]来计算边缘成本函数，但是我们还通过整合比例来进一步提高鲁棒性。对于我们的边缘检测器，我们使用边缘检测器灵敏度阈值T和尺度S，我们计算n \x3d | T×S |梯度幅度阈值非极大值抑制。给定一组边缘图像，E 1，。 。 。 ，E n，使用每对图像比例和阈值。我们计算欧几里得距离变换D1。 。 。 ，Dn，对于每个边缘图像（即，Di中的每个像素的值是到E i中最近边缘像素的距离）。最后，我们计算边缘成本曲面为：
+
+
+
+n(cid:88) 
+
+N（CID：88）
+
+
+
+i=1 
+
+I \x3d 1
+
+
+
+S (x, y) = 
+
+S（x，y）\x3d
+
+
+
+1 n 
+
+1 n
+
+
+
+Di (x, y) Di (x, y) + κ 
+
+Di（x，y）Di（x，y）+κ
+
+
+
+. 
+
+。
+
+
+
+(8) 
+
+（8）
+
+
+
+10 
+
+10
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+Fig. 3. Synthetic input images for one sub ject 
+
+图3.一个子对象的合成输入图像
+
+
+
+−70◦ −50◦ −30◦ −15◦ 0◦ 
+
+-70°-50°-30°-15°0°
+
+
+
+Rotation angle 15◦ 30◦ 50◦ 70◦ Mean Method Average face 3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35 Proposed (landmarks only) 2.67 2.60 2.58 2.64 2.56 2.49 2.50 2.54 2.63 2.58 Aldrian and Smith [9] 2.64 2.60 2.55 2.54 2.49 2.42 2.43 2.44 2.54 2.52 Romdhani et al. [4] (soft) 2.65 2.59 2.58 2.61 2.59 2.50 2.50 2.46 2.51 2.55 Proposed (ICEF) 2.38 2.40 2.51 2.38 2.52 2.45 2.43 2.38 2.3 2.42 Proposed (hard) 2.35 2.26 2.38 2.40 2.51 2.39 2.40 2.20 2.26 2.35 
+
+旋转角度15°30°50°70°平均方法平均面积3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35 3.35建议（仅限地标）2.67 2.60 2.58 2.64 2.56 2.49 2.50 2.54 2.63 2.58 Aldrian和Smith [9] 2.64 2.60 2.55 2.54 2.49 2.42 2.43 2.44 2.54 2.52 Romdhani et al。 [4]（软）2.65 2.59 2.58 2.61 2.59 2.50 2.50 2.46 2.51 2.55拟议（ICEF）2.38 2.40 2.51 2.38 2.52 2.45 2.43 2.38 2.3 2.42拟议（硬性）2.35 2.26 2.38 2.40 2.51 2.39 2.40 2.20 2.26 2.35
+
+
+
+Table 1. Mean Euclidean vertex distance (mm) with ground truth landmarks 
+
+表1.具有地面真实地标的平均欧几里得顶点距离（毫米）
+
+
+
+The parameter κ determines the inﬂuence range of an edge in an adaptive manner. Amberg et al. [6] suggest a value for κ of 1/20th the expected size of the head in pixels. We compute this parameter automatically from the scale s. An example of an edge cost surface is shown in Figure 2. To evaluate the edge cost, we compute model contour vertices as in Section 4.2, pro ject them into the image S (SOP (cid:2)Piα + ¯fi , R, t, s(cid:3)). and interpolate the edge cost function using bilinear interpolation: (9) As with the hard edge cost, we found that the best performance was achieved by also including the landmark and prior terms in a hybrid ob jective function. Hence, we minimise: 
+
+参数κ以自适应方式确定边缘的影响范围。 Amberg等人[6]建议κ的值为头部的预期大小的1/20（以像素为单位）。我们根据比例s自动计算这个参数。图2显示了边缘代价曲面的一个例子。为了评估边缘代价，我们计算模型轮廓顶点，如4.2节所示，将它们投影到图像S（SOP（cid：2）Piα+¯fi，R， t，s（cid：3））。并使用双线性插值对边缘成本函数进行插值：（9）与硬边成本一样，我们发现最佳性能是通过将混合目标函数中的地标和先验项包括在内来实现的。因此，我们尽量减少：
+
+
+
+1 |B(α, R, t, s)| 
+
+1 | B（α，R，t，s）|
+
+
+
+Esoftedge (α, R, t, s) = 
+
+Esoftedge（α，R，t，s）\x3d
+
+
+
+(cid:88) 
+
+（CID：88）
+
+
+
+i∈B(α,R,t,s) 
+
+i∈B（α，R，T，S）
+
+
+
+E (α, R, t, s) = w1Elmk (α, R, t, s) + w2Esoftedge (α, R, t, s) + w3Eprior (α). (10) 
+
+E（α，R，t，s）\x3d w1Elmk（α，R，t，s）+ w2Esoftedge（α，R，t，s）+ w3Eprior（α）。 （10）
+
+
+
+We again initialise by ﬁtting to landmarks only using the method in Section 4.1, retain the hyperbox constraint and optimise using the trust-region-reﬂective algorithm. We use the same weights as for the hard correspondence method in our experiments. 
+
+我们再次仅使用4.1节中的方法对地标进行初始化，保留超盒约束并使用信赖域反射算法进行优化。我们在实验中使用与硬对应方法相同的权重。
+
+
+
+6 Experimental Results 
+
+6个实验结果
+
+
+
+We present two sets of experimental results. First, we use synthetic images with known ground truth 3D shape in order to quantitatively evaluate our method and provide comparison to previous work. Second, we use real images to provide qualitative evidence of the performance of our method in uncontrolled conditions. For the 3DMM in both sets of experiments we use the Basel Face Model [28]. 
+
+我们提出两组实验结果。首先，我们使用具有已知基本真实3D形状的合成图像来定量评估我们的方法并提供与以前工作的比较。其次，我们使用真实图像为我们的方法在非受控条件下的性能提供定性证据。对于这两组实验中的3DMM，我们使用巴塞尔人脸模型[28]。
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+11 
+
+11
+
+
+
+Landmark noise std. dev. Method σ = 0 σ = 1 σ = 2 σ = 3 σ = 4 σ = 5 Proposed (landmarks only) 2.58 2.60 2.61 2.68 2.76 2.85 Aldrian and Smith [9] 2.52 2.53 2.55 2.62 2.65 2.73 Romdhani et al. [4] (soft) 2.55 2.57 2.57 2.62 2.70 2.76 Proposed (ICEF) 2.42 2.43 2.43 2.50 2.57 2.60 Proposed (hard) 2.35 2.36 2.35 2.39 2.47 2.50 
+
+地标噪音标准。开发。方法σ\x3d 0σ\x3d 1σ\x3d 2σ\x3d 3σ\x3d 4σ\x3d 5建议（仅限地标）2.58 2.60 2.61 2.68 2.76 2.85 Aldrian和Smith [9] 2.52 2.53 2.55 2.62 2.65 2.73 Romdhani et al。 [4]（软）2.55 2.57 2.57 2.62 2.70 2.76拟议（ICEF）2.42 2.43 2.43 2.50 2.57 2.60拟议（硬）2.35 2.36 2.35 2.39 2.47 2.50
+
+
+
+Table 2. Mean Euclidean vertex distance (mm) with noisy landmarks 
+
+表2.具有嘈杂地标的平均欧几里德顶点距离（毫米）
+
+
+
+−70◦ −50◦ −30◦ −15◦ 0◦ 
+
+-70°-50°-30°-15°0°
+
+
+
+Rotation angle 15◦ 30◦ 50◦ 70◦ Mean Method Proposed (landmarks only) 6.79 6.84 5.19 5.74 5.68 6.34 6.48 7.04 7.74 6.43 Zhu et al. [18] N/A N/A 4.63 5.09 4.19 5.22 4.92 N/A N/A N/A Romdhani et al. [4] (soft) 4.46 3.42 3.66 3.78 3.77 3.57 4.31 4.19 4.73 3.99 Proposed (ICEF) 3.70 3.32 3.26 3.23 3.37 3.50 3.43 4.07 3.52 3.49 Proposed (hard) 3.43 3.20 3.19 3.09 3.30 3.36 3.36 3.84 3.41 3.35 
+
+旋转角度15°30°50°70°平均方法建议（仅限地标）6.79 6.84 5.19 5.74 5.68 6.34 6.48 7.04 7.74 6.43 Zhu et al。 [18] N / A N / A 4.63 5.09 4.19 5.22 4.92 N / A N / A N / A Romdhani et al。 [4]（软）4.46 3.42 3.66 3.78 3.77 3.57 4.31 4.19 4.73 3.99拟议（ICEF）3.70 3.32 3.26 3.23 3.37 3.50 3.43 4.07 3.52 3.49拟议（硬）3.43 3.20 3.19 3.09 3.30 3.36 3.36 3.84 3.41 3.35
+
+
+
+Table 3. Mean Euclidean vertex distance (mm) with automatically detected landmarks 
+
+表3.具有自动检测的界标的平均欧几里德顶点距离（毫米）
+
+
+
+6.1 Quantitative Evaluation 
+
+6.1定量评估
+
+
+
+We begin with a quantitative comparative evaluation on synthetic data. We use the 10 out-of-sample faces supplied with the Basel Face Model and render orthographic images of each face in 9 poses (rotations of 0◦ , ±15◦ , ±30◦ , ±50◦ and ±70◦ about the vertical axis). We show sample input images for one sub ject in Figure 3. In all experiments, we report the mean Euclidean distance between ground truth and estimated face surface in mm after Procrustes alignment. In the ﬁrst experiment, we use ground truth landmarks. Speciﬁcally, we use the 70 Farkas landmarks, pro ject the visible subset to the image (yielding between 37 and 65 landmarks per image) and round to the nearest pixel. In Table 1 we show results averaged over pose angle and over the whole dataset. As a baseline, we show the error if we simply use the average face shape. We then show the result of ﬁtting only to landmarks, i.e. the method in Section 3. We include two comparison methods. The approach of Aldrian and Smith [9] uses only landmarks but with an aﬃne camera model and a learnt model of landmark variance. The soft edge correspondence method of Romdhani et al. [4] is described in Section 5. The ﬁnal two rows show two variants of our proposed methods: the fast Iterated Closest Edge Fitting version and the full version with nonlinear optimisation of the hard correspondence cost. Average performance over the whole dataset is best for our method and, in general, using edges over landmarks only and applying nonlinear optimisation improves performance. The performance improvement of our methods over landmark-only methods improves with pose angle. This suggest that edge information becomes more salient for non-frontal poses. 
+
+我们从合成数据的定量比较评估开始。我们使用巴塞尔人脸模型提供的10个样本外面，并以9个姿势（围绕垂直方向旋转0°，±15°，±30°，±50°和±70°）呈现每个人脸的正交图像轴）。我们在图3中显示了一个子对象的样本输入图像。在所有的实验中，我们报告了在Procrustes对齐之后，以毫米为单位的地面真实和估计的面部表面之间的平均欧几里得距离。在第一个实验中，我们使用了地面真实的地标。具体而言，我们使用70 Farkas地标，将可见子集投影到图像上（每个图像产生37到65个地标）并绕到最近的像素。在表1中，我们显示了在姿态角和整个数据集上的平均结果。作为基线，如果我们简单地使用平均脸形，我们将显示错误。然后我们将结果的结果仅显示在地标上，即第3节中的方法。我们包括两种比较方法。 Aldrian和Smith [9]的方法只使用了地标，但是使用了一个有效的相机模型和一个学习模型的地标方差。 Romdhani等人的软边对应方法[4]在第5节中描述。​​最后两行显示了我们提出的方法的两种变体：快速迭代最近边拟合版本和完全版本，其中非线性优化了硬通信成本。整个数据集的平均性能对我们的方法来说是最好的，并且通常只使用地标上的边缘，并且应用非线性优化可以提高性能。我们的方法在仅有地标的方法上的性能改进随着姿态角度而改善。这表明边缘信息对于非正面姿势更为显着。
+
+
+
+12 
+
+12
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+Fig. 4. Qualitative frontalisation results 
+
+图4.定性的正化结果
+
+
+
+The second experiment is identical to the ﬁrst except that we add Gaussian noise of varying standard deviation to the ground truth landmark positions. In Table 2 we show results averaged over all poses and sub jects. 
+
+第二个实验与第一个实验相同，不同之处在于我们将具有不同标准差的高斯噪声添加到地面真实地标位置。在表2中，我们显示了所有姿势和主题的平均结果。
+
+
+
+In the ﬁnal experiment we use landmarks that are automatically detected using the method of Zhu and Ramanan [26]. This enables us to include comparison with the recent ﬁtting algorithm of Zhu et al. [18]. We use the author’s own implementation which only works with a ﬁxed set of 68 landmarks. This means that the method cannot be applied to the more extreme pose angles where fewer landmarks are detected. In this more challenging scenario, our method again gives the best overall performance and is superior for all pose angles. 
+
+在最后的实验中，我们使用可以使用Zhu和Ramanan [26]的方法自动检测的地标。这使我们能够与朱等人最近的拟合算法进行比较。 [18]。我们使用作者自己的实现，它只能与固定的68个地标集合一起使用。这意味着该方法不能应用于检测到较少地标的更极端的姿态角。在这种更具挑战性的情况下，我们的方法再次提供了最佳的整体性能，并且对于所有姿态角度都是优越的
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+13 
+
+13
+
+
+
+Fig. 5. Qualitative pose editing results 
+
+图5.定性姿势编辑结果
+
+
+
+6.2 Qualitative Evaluation 
+
+6.2定性评估
+
+
+
+In Figure 4 we show qualitative examples from the CMU PIE [29] dataset. Here, we ﬁt to images (ﬁrst row) in a non-frontal pose using automatically detected landmarks [26] and show the reconstruction in the second row. We texture map the image onto the mesh, rotate to frontal pose (bottom row) and compare to an actual frontal view (third row). Finally, we show qualitative examples from the Labelled Faces in the Wild dataset [30] in Figure 5. Again, we texture map the image to the mesh and show a range of poses. These results show that our method is capable of robustly and fully automatically ﬁtting to unconstrained images. 
+
+在图4中，我们展示了来自CMU PIE [29]数据集的定性示例。在这里，我们使用自动检测到的地标在非正面姿势下拍摄图像（第一行）[26]，并在第二行显示重建。我们将图像纹理映射到网格上，旋转到正面姿势（底部行）并与实际正面视图（第三行）进行比较。最后，我们从图5中的野生数据集[30]中的Labeled Faces中展示定性示例。我们再次将纹理映射到网格并显示一系列姿势。这些结果表明我们的方法能够完全自动地适应无约束的图像。
+
+
+
+7 Conclusions 
+
+7结论
+
+
+
+We have presented a fully automatic algorithm for ﬁtting a 3DMM to single images using hard edge correspondence and compared it to existing methods using soft correspondence. In 3D-3D alignment, the soft correspondence of LM-ICP [16] is demonstrably more robust than hard ICP [20]. However, in the context of 3D-2D nonrigid alignment, a soft edge cost function is neither continuous nor diﬀerentiable since contours appear, disappear, split and merge under parameter changes [7]. This makes its optimisation challenging, unstable and highly dependent on careful choice of optimisation parameters. Although our proposed algorithm relies on potentially brittle hard correspondences, solving for shape and pose separately requires only solution of a linear problem and, together, optimisation of a multilinear problem. This makes iterated closest edge ﬁtting very fast and it provides an initialisation that allows the subsequent nonlinear optimisation to converge to a better optimum. We believe that this explains the improved performance over edge ﬁtting with soft correspondence. There are many ways this work can be extended. First, we could explore other ways in which the notion of soft correspondence is formulated. For example, 
+
+我们提出了一种全自动算法，用于将3DMM融合到使用硬边对应的单个图像，并将其与使用软对应的现有方法进行比较。在3D-3D对齐中，LM-ICP [16]的软对应比硬ICP [20]更明显。然而，在3D-2D非刚性对齐的情况下，由于等高线在参数变化下出现，消失，分裂和合并[7]，所以软边缘成本函数既不连续也不可微分。这使得它的优化具有挑战性，不稳定并且高度依赖于仔细选择优化参数。虽然我们提出的算法依赖于潜在的脆性硬对应，但分别求解形状和姿态只需求解线性问题，并且一起优化多线性问题。这使得迭代最接近边缘的速度非常快，并且它提供了一个初始化，允许随后的非线性优化收敛到更好的最佳状态。我们认为这解释了通过软对应改善边缘贴合性能。这项工作有很多方法可以延长。首先，我们可以探索制定软通信概念的其他方式。例如，
+
+
+
+14 
+
+14
+
+
+
+Anil Bas, William A. P. Smith, Timo Bolkart, Stefanie Wuhrer 
+
+Anil Bas，William A. P. Smith，Timo Bolkart，Stefanie Wuhrer
+
+
+
+we could borrow from SoftPOSIT [31] or Blind PnP [32] which both estimate pose with unknown 3D-2D correspondence. Second, we could incorporate any of the reﬁnements to standard ICP [33]. Third, we currently use only geometric information and do not ﬁt texture. Finally, we would like to extend the method to video using a model that captures expression variation and incorporating temporal smoothness constraints. 
+
+我们可以从SoftPOSIT [31]或Blind PnP [32]中借用，它们都可以估计未知3D-2D对应的姿态。其次，我们可以将任何改进都纳入标准ICP [33]。第三，我们目前只使用几何信息而不适合纹理。最后，我们希望将该方法扩展到使用捕获表达式变化并纳入时间平滑约束的模型的视频。
+
+
+
+References 
+
+参考
+
+
+
+In: 
+
+在：
+
+
+
+1. Blanz, V., Vetter, T.: Face recognition based on ﬁtting a 3D morphable model. IEEE Trans. Pattern Anal. Mach. Intell. 25 (2003) 1063–1074 2. Ichim, A.E., Bouaziz, S., Pauly, M.: Dynamic 3D avatar creation from hand-held video input. ACM Trans. Graph. 34 (2015) 45 3. Blanz, V., Vetter, T.: A morphable model for the synthesis of 3D faces. SIGGRAPH. (1999) 4. Romdhani, S., Vetter, T.: Estimating 3D shape and texture using pixel intensity, edges, specular highlights, texture constraints and a prior. In: CVPR. (2005) 5. Huber, P., Feng, Z., Christmas, W., Kittler, J., R¨atsch, M.: Fitting 3D morphable models using local features. In: ICIP. (2015) 6. Amberg, B., Blake, A., Fitzgibbon, A., Romdhani, S., Vetter, T.: Reconstructing high quality face-surfaces using model based stereo. In: ICCV. (2007) 7. Keller, M., Knothe, R., Vetter, T.: 3D reconstruction of human faces from occluding contours. In: MIRAGE. (2007) 8. Breuer, P., Kim, K., Kienzle, W., Sch¨olkopf, B., Blanz, V.: Automatic 3D face reconstruction from single images or video. In: Proc. FG. (2008) 1–8 9. Aldrian, O., Smith, W.A.P.: Inverse rendering of faces with a 3D morphable model. IEEE Trans. Pattern Anal. Mach. Intell. 35 (2013) 1080–1093 10. Amberg, B., Vetter, T.: Optimal landmark detection using shape models and branch and bound. In: Proc. ICCV. (2011) 11. Sch¨onborn, S., Forster, A., Egger, B., Vetter, T.: A monte carlo strategy to integrate detection and model-based face analysis. Patt. Rec. (2013) 101–110 12. Cootes, T.F., Taylor, C.J., Cooper, D., Graham, J.: Active shape models – their training and application. Comput. Vis. Image Underst. 61 (1995) 38–59 13. Atkinson, G.A., Smith, M.L., Smith, L.N., Farooq, A.R.: Facial geometry estimation using photometric stereo and proﬁle views. In: Proc. ICB. (2009) 14. Moghaddam, B., Lee, J., Pﬁster, H., Machira ju, R.: Model-based 3D face capture with shape-from-silhouettes. In: Proc. FG. (2003) 15. L¨uthi, M., Albrecht, T., Vetter, T.: Probabilistic modeling and visualization of the ﬂexibility in morphable models. In: Math. of Surf. XIII. (2009) 16. Fitzgibbon, A.W.: Robust registration of 2D and 3D point sets. Image Vis. Comput. 21 (2003) 1145–1153 17. Cashman, T.J., Fitzgibbon, A.W.: What shape are dolphins? Building 3D morphable models from 2d images. IEEE Trans. Pattern Anal. Mach. Intell. 35 (2013) 232–244 18. Zhu, X., Lei, Z., Yan, J., Yi, D., Li, S.Z.: High-ﬁdelity pose and expression normalization for face recognition in the wild. In: Proc. CVPR. (2015) 787–796 19. S´anchez-Escobedo, D., Castel´an, M., Smith, W.: Statistical 3D face shape estimation from occluding contours. Comput. Vis. Image Underst. 142 (2016) 
+
+1. Blanz，V.，Vetter，T .:基于拟合3D变形模型的人脸识别。 IEEE Trans。模式分析。马赫。 INTELL。 2. Ichim，A.E.，Bouaziz，S.，Pauly，M .:从手持视频输入创建动态3D头像。 ACM Trans。图形。 3. Blanz，V.，Vetter，T .:用于合成3D面的可变形模型。 SIGGRAPH。 （1999）4. Romdhani，S.，Vetter，T .:使用像素强度，边缘，镜面高光，纹理约束和先验估计3D形状和纹理。在：CVPR。 （2005）5. Huber，P.，Feng，Z.，Christmas，W.，Kittler，J.，R？eatsch，M .:使用局部特征拟合3D变形模型。在：ICIP。 （2015）6. Amberg，B.，Blake，A.，Fitzgibbon，A.，Romdhani，S.，Vetter，T .:使用基于模型的立体声重建高质量的人脸表面。在：ICCV。 （2007）7. Keller，M.，Knothe，R.，Vetter，T .:人脸从闭合轮廓的三维重建。在：MIRAGE。 （2007）8. Breuer，P.，Kim，K.，Kienzle，W.，Schöolkopf，B.，Blanz，V .:从单个图像或视频自动进行3D人脸重建。在：Proc。 FG。 （2008）1-8 9. Aldrian，O.，Smith，W.A.P .:用3D形变模型反演人脸。 IEEE Trans。模式分析。马赫。 INTELL。 10. Amberg，B.，Vetter，T .:使用形状模型和分支定界的最优界标检测。在：Proc。 ICCV。 （2011）11. Schononborn，S.，Forster，A.，Egger，B.，Vetter，T .:一种集成检测和基于模型的人脸分析的蒙特卡罗策略。帕特。建议（2013）101-110 12. Cootes，T.F.，Taylor，C.J.，Cooper，D.，Graham，J .:主动形状模型 - 他们的训练和应用。 COMPUT。可见。 Image Underst。 13. Atkinson，G.A.，Smith，M.L.，Smith，L.N.，Farooq，A.R .:使用光度立体和剖面视图的面部几何估计。在：Proc。 ICB。 （2009）14. Moghaddam，B.，Lee，J.，P。，H.，Machira ju，R。：基于模型的3D脸部捕捉，带有轮廓形状。在：Proc。 FG。 （2003）15.Lüuthi，M.，Albrecht，T。，Vetter，T .:可变形模型中灵活性的概率建模和可视化。在：数学。冲浪。十三。 （2009）16. Fitzgibbon，A.W .:二维和三维点集的鲁棒配准。图像可见性。 COMPUT。 17. Cashman，T.J.，Fitzgibbon，A.W .:海豚是什么形状？从2D图像建立3D变形模型。 IEEE Trans。模式分析。马赫。 INTELL。 35（2013）232-244 18. Zhu，X.，Lei，Z.，Yan，J.，Yi，D.，Li，S.Z .:高保真姿态和表情归一化在野外人脸识别中的应用。在：Proc。 CVPR。 （2015）787-796 19. S\x26#39
+
+
+
+Fitting a 3D Morphable Model to Edges 
+
+将三维形状模型拟合到边缘
+
+
+
+15 
+
+15
+
+
+
+20. Besl, P.J., McKay, N.D.: A method for registration of 3-D shapes. IEEE Trans. Pattern Anal. Mach. Intell. 14 (1992) 239—256 21. Suwa janakorn, S., Kemelmacher-Shlizerman, I., Seitz, S.M.: Total moving face reconstruction. In: ECCV. (2014) 22. Cao, C., Bradley, D., Zhou, K., Beeler, T.: Real-time high-ﬁdelity facial performance capture. ACM Trans. Graph. 34 (2015) 46 23. Dementhon, D.F., Davis, L.S.: Model-based ob ject pose in 25 lines of code. Int. J. Comput. Vis. 15 (1995) 123–141 24. Brunton, A., Salazar, A., Bolkart, T., Wuhrer, S.: Review of statistical shape spaces for 3D data with comparative analysis for human faces. Comput. Vis. Image Underst. 128 (2014) 1–17 25. Coleman, T., Li, Y.: An interior, trust region approach for nonlinear minimization sub ject to bounds. SIAM J. Optimiz. 6 (1996) 418–445 26. Zhu, X., Ramanan, D.: Face detection, pose estimation, and landmark localization in the wild. In: Proc. CVPR. (2012) 27. Grant, M., Boyd, S., Ye, Y.: Disciplined convex programming. In: Global Optimization: From Theory to Implementation. Springer (2006) 155–210 28. Paysan, P., Knothe, R., Amberg, B., Romdhani, S., Vetter, T.: A 3D face model for pose and illumination invariant face recognition. In: Proc. AVSS. (2009) 29. Sim, T., Baker, S., Bsat, M.: The CMU pose, illumination, and expression database. IEEE Trans. Pattern Anal. Mach. Intell. 25 (2003) 1615–1618 30. Huang, G.B., Ramesh, M., Berg, T., Learned-Miller, E.: Labeled faces in the wild: A database for studying face recognition in unconstrained environments. Technical Report 07-49, University of Massachusetts, Amherst (2007) 31. David, P., DeMenthon, D., Duraiswami, R., Samet, H.: SoftPOSIT: Simultaneous pose and correspondence determination. In: Proc. ECCV. (2002) 698–714 32. Moreno-Noguer, F., Lepetit, V., Fua, P.: Pose priors for simultaneously solving alignment and correspondence. In: Proc. ECCV. (2008) 405–418 33. Rusinkiewicz, S., Levoy, M.: Eﬃcient variants of the ICP algorithm. 3DIM. (2001) 
+
+20.Besl，P.J.，McKay，N.D .:三维形状配准方法。 IEEE Trans。模式分析。马赫。 INTELL。 14（1992）239-256 21. Suwa janakorn，S.，Kemelmacher-Shlizerman，I.，Seitz，S.M .: Total moving face reconstruction。在：ECCV。 （2014）22. Cao，C.，Bradley，D.，Zhou，K.，Beeler，T .:实时高清脸部表情捕捉。 ACM Trans。图形。 23. Dementhon，D.F.，Davis，L.S。：基于模型的对象构成25行代码。诠释。 J. Comput。可见。 15. Brunton，A.，Salazar，A.，Bolkart，T.，Wuhrer，S .:用人脸比较分析回顾三维数据的统计形状空间。 COMPUT。可见。 Image Underst。 25. Coleman，T.，Li，Y .:用于非线性最小化对象边界的内部信赖域方法。 SIAM J. Optimiz。 6，（1996）418-445 26. Zhu，X.，Ramanan，D .:人脸检测，姿态估计和地标在野外定位。在：Proc。 CVPR。 （2012）27. Grant，M.，Boyd，S.，Ye，Y .: Disciplined convex programming。在：全球优化：从理论到实施。 Springer（2006）155-210 28. Paysan，P.，Knothe，R.，Amberg，B.，Romdhani，S.，Vetter，T .:姿态和光照不变人脸识别的3D人脸模型。在：Proc。 AVSS。 （2009）29.Sim，T.，Baker，S.，Bsat，M .: CMU姿势，照度和表情数据库。 IEEE Trans。模式分析。马赫。 INTELL。 25，（2003）1615-1618 30. Huang，G.B.，Ramesh，M.，Berg，T.，Learned-Miller，E .: Labeled faces in the wild：A database for studying face recognition in unconstrained environments。马萨诸塞大学阿默斯特分校技术报告07-49（2007）31. David，P.，DeMenthon，D.，Duraiswami，R.，Samet，H .: SoftPOSIT：同步姿势和对应性确定。在：Proc。 ECCV。 （2002）698-714 32. Moreno-Noguer，F.，Lepetit，V.，Fua，P .:提出了同时解决对齐和对应的先验问题。在：Proc。 ECCV。 （2008）405-418 33. Rusinkiewicz，S.，Levoy，M .: ICP算法的有效变体。 3DIM。 （2001年）
+
+
+
+In: Proc. 
+
+在：Proc。
+
+
+

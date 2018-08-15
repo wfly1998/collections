@@ -1,7 +1,5 @@
-# collections
+# My Collections
 
-This is my collections.
+* code > My collections of codes
+* paper_translation > My translation of some papers
 
-* MERCURY_UNICOM.py: restart mercury router and connect unicom network **for client of UJN**.
-* translater.py: translate word from Youdao or translate sentense from google. (wordTranslater.py and pdfTranslater.py depend it.)
-* coming soon.
