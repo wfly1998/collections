@@ -66,7 +66,7 @@ $$
 
 ### 3.1 姿势估计
 
-我们使用POS算法的简单扩展[23]对$\mathbf R$，$\mathbf t$和$s$进行初始估计。与POS相比，我们另外强制$\mathbf R$是一个有效的旋转矩阵。我们从最小二乘意义上解开一个无约束的系统开始。我们将三个点的两个副本叠加在齐次坐标中，使得$\mathbf A_{2i-1}=\left[u_i\ v_i\ w_i\ 1\ 0\ 0\ 0\ 0\right]$和$\mathbf A_{2i}=\left[0\ 0\ 0\ 0\ u_i\ v_i\ w_i\ 1\right]$并形成相应2D的长矢量点$\mathbf d=\left[x_1\ y_1\ ...\ x_L\ y_L\right]^\mathrm T$。然后用线性最小二乘法求解$\mathbf{Ak}=\mathbf d$中的$\mathbf k\in\mathbb R^8$。我们定义$\mathbf r_1=\left[k_1\ k_2\ k_3\right]$和$\mathbf r_2=\left[k_5\ k_6\ k_7\right]$。比例由$s=\left(\|\mathbf r_1\|+\|\mathbf r_2\|\right)/2$给出，平移矢量由$\mathbf t=\left[k_4/s\ l_8/s\right]^\mathrm T$给出。我们对由$\mathbf r_1$和$\mathbf r_2$形成的矩阵执行奇异值分解：
+我们使用POS算法的简单扩展[23]对$\mathbf R$，$\mathbf t$和$s$进行初始估计。与POS相比，我们另外强制$\mathbf R$是一个有效的旋转矩阵。我们从最小二乘意义上解开一个无约束的系统开始。我们将三个点的两个副本叠加在齐次坐标中，使得$\mathbf A_{2i-1}=\left[u_i\ v_i\ w_i\ 1\ 0\ 0\ 0\ 0\right]$和$\mathbf A_{2i}=\left[0\ 0\ 0\ 0\ u_i\ v_i\ w_i\ 1\right]$并形成相应2D的长矢量点$\mathbf d=\left[x_1\ y_1\ ...\ x_L\ y_L\right]^\mathrm T$。然后用线性最小二乘法求解$\mathbf{Ak}=\mathbf d$中的$\mathbf k\in\mathbb R^8$。我们定义$\mathbf r_1=\left[k_1\ k_2\ k_3\right]$和$\mathbf r_2=\left[k_5\ k_6\ k_7\right]$。比例由$s=\left(\|\mathbf r_1\|+\|\mathbf r_2\|\right)/2$给出，平移矢量由$\mathbf t=\left[k_4/s\ k_8/s\right]^\mathrm T$给出。我们对由$\mathbf r_1$和$\mathbf r_2$形成的矩阵执行奇异值分解：
 $$
 \mathbf{USV}^\mathrm T=\left[\begin{matrix}\mathbf r_1\\\mathbf r_2\\\mathbf  r_1\times\mathbf r_2\end{matrix}\right]
 $$
